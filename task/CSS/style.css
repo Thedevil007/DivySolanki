@@ -1,0 +1,52 @@
+/* Make body a flex container to center everything */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Full browser height */
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #fdfdfd;
+  flex-direction: column;
+}
+
+table {
+  width: 80%;
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 10px;
+}
+
+th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+input, select {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  padding: 5px;
+  width: 90%;
+}
+
+button {
+  background-color: #5c75e4;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+h1, h2, #output {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#output {
+  font-weight: bold;
+}

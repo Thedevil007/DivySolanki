@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GeoNames API App</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <h1>GeoNames API Table</h1>
+
+  <table border="1" cellpadding="10">
+    <thead>
+      <tr>
+        <th>API name</th>
+        <th>API description</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Row 1: Capital City -->
+      <tr>
+        <td>1. Capital City</td>
+        <td>
+          <label for="capital-country">Country Code:</label>
+          <select id="capital-country">
+            <option value="GB">United Kingdom</option>
+            <option value="US">United States</option>
+            <option value="IN">India</option>
+            <option value="FR">France</option>
+            <option value="JP">Japan</option>
+          </select>
+        </td>
+        <td><button onclick="getCapitalCity()">Submit</button></td>
+      </tr>
+
+      <!-- Row 2: Postal Code -->
+      <tr>
+        <td>2. Postal Code Lookup</td>
+        <td>
+          <label>Latitude:</label>
+          <input type="text" id="postal-lat" placeholder="e.g. 51.5"><br>
+          <label>Longitude:</label>
+          <input type="text" id="postal-lng" placeholder="e.g. -0.1">
+        </td>
+        <td><button onclick="getPostalCode()">Submit</button></td>
+      </tr>
+
+      <!-- Row 3: Weather Info -->
+      <tr>
+        <td>3. Weather Info</td>
+        <td>
+          <label>Postal Code:</label>
+          <input type="text" id="weather-postal" placeholder="e.g. SW1A1AA"><br>
+          <label>Country Code:</label>
+          <input type="text" id="weather-country" placeholder="e.g. GB">
+        </td>
+        <td><button onclick="getWeather()">Submit</button></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>RESULTS</h2>
+  <div id="output"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
