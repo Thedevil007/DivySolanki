@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>GeoNames API App</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <h1>GeoNames API Table</h1>
@@ -30,31 +30,33 @@
             <option value="JP">Japan</option>
           </select>
         </td>
-        <td><button onclick="getCapitalCity()">Submit</button></td>
+        <td><button id="capitalCityBtn">Submit</button></td>
       </tr>
 
-      <!-- Row 2: Postal Code -->
+      <!-- Row 2: Postal Code Lookup -->
       <tr>
         <td>2. Postal Code Lookup</td>
         <td>
-          <label>Latitude:</label>
-          <input type="text" id="postal-lat" placeholder="e.g. 51.5"><br>
-          <label>Longitude:</label>
-          <input type="text" id="postal-lng" placeholder="e.g. -0.1">
+          <label for="postal-lat">Latitude:</label>
+          <input type="text" id="postal-lat" placeholder="e.g. 51.5" />
+          <br />
+          <label for="postal-lng">Longitude:</label>
+          <input type="text" id="postal-lng" placeholder="e.g. -0.1" />
         </td>
-        <td><button onclick="getPostalCode()">Submit</button></td>
+        <td><button id="postalCodeBtn">Submit</button></td>
       </tr>
 
       <!-- Row 3: Weather Info -->
       <tr>
         <td>3. Weather Info</td>
         <td>
-          <label>Postal Code:</label>
-          <input type="text" id="weather-postal" placeholder="e.g. SW1A1AA"><br>
-          <label>Country Code:</label>
-          <input type="text" id="weather-country" placeholder="e.g. GB">
+          <label for="weather-postal">Postal Code:</label>
+          <input type="text" id="weather-postal" placeholder="e.g. SW1A1AA" />
+          <br />
+          <label for="weather-country">Country Code:</label>
+          <input type="text" id="weather-country" placeholder="e.g. GB" />
         </td>
-        <td><button onclick="getWeather()">Submit</button></td>
+        <td><button id="weatherBtn">Submit</button></td>
       </tr>
     </tbody>
   </table>
