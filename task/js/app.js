@@ -51,8 +51,27 @@ function getWeather() {
     });
 }
 
+function getTimezone() {
+  const lat = document.getElementById("timezone-lat").value;
+  const lng = document.getElementById("timezone-lng").value;
+
+  fetch(`php/getTimezone.php?lat=${lat}&lng=${lng}`)
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.timezoneId) {
+        document.getElementById("output").innerText = `Timezone: ${data.timezoneId}`;
+      } else {
+        document.getElementById("output").innerText = `Error: ${data.message || "Unknown error"}`;
+      }
+    })
+    .catch(() => {
+      document.getElementById("output").innerText = "Fetch failed.";
+    });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("capitalCityBtn").addEventListener("click", getCapitalCity);
   document.getElementById("postalCodeBtn").addEventListener("click", getPostalCode);
   document.getElementById("weatherBtn").addEventListener("click", getWeather);
+  document.getElementById("timezoneBtn").addEventListener("click", getTimezone); // ✅ NEW
 });
