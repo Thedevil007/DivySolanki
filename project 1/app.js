@@ -1,101 +1,129 @@
 let map = L.map('map').setView([20, 0], 2);
 let borderLayer;
+let cityMarkers;
 
+// Add OpenStreetMap tile layer
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-// Load countries into dropdown
+// Load country list from PHP backend
 fetch('php/getCountryList.php')
-  .then(res => res.json())
+  .then(response => {
+    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+    return response.json();
+  })
   .then(list => {
     if (!Array.isArray(list)) {
-      console.error('Invalid response from getCountryList.php');
-      return;
+      throw new Error("Country list is not an array.");
     }
+
     list.forEach(country => {
       $('#countrySelect').append(
-        $('<option>').val(country.iso).text(country.name)
+        $('<option>').val(country.iso_a2).text(country.name)
       );
     });
   })
-  .catch(err => console.error("Country list fetch failed:", err));
+  .catch(error => {
+    console.error("Error loading country list:", error.message || error);
+  });
 
+// Handle country selection
 $('#countrySelect').on('change', function () {
   const code = this.value;
   if (!code) return;
 
+  // Load country border
   fetch(`php/getCountryBorder.php?code=${code}`)
-    .then(res => res.json())
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+      return response.json();
+    })
     .then(data => {
       if (borderLayer) map.removeLayer(borderLayer);
+
       borderLayer = L.geoJSON(data).addTo(map);
       map.fitBounds(borderLayer.getBounds());
-      $('#demographicsContent').html(`<p><strong>Country:</strong> ${data.properties.name}</p>`);
+
+      const countryName = data.properties?.name || 'Unknown';
+      $('#demographicsContent').html(`<p><strong>Country:</strong> ${countryName}</p>`);
+    })
+    .catch(error => {
+      console.error("Error loading country border:", error.message || error);
     });
+
+  // Load cities
+  loadCityMarkers(code);
 });
 
+// Auto-select country based on geolocation
 if (navigator.geolocation) {
   navigator.geolocation.getCurrentPosition(position => {
-    const lat = position.coords.latitude;
-    const lng = position.coords.longitude;
+    const { latitude: lat, longitude: lng } = position.coords;
     map.setView([lat, lng], 5);
 
     fetch(`php/getGeocode.php?lat=${lat}&lng=${lng}`)
-      .then(res => res.json())
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+        return response.json();
+      })
       .then(data => {
-        const code = data.results[0].components['ISO_3166-1_alpha-2'];
-        $('#countrySelect').val(code).trigger('change');
+        const code = data?.results?.[0]?.components?.['ISO_3166-1_alpha-2'];
+        if (code) {
+          $('#countrySelect').val(code).trigger('change');
+        } else {
+          console.warn("Geocode did not return a country code.", data);
+        }
+      })
+      .catch(error => {
+        console.error("Reverse geocoding failed:", error.message || error);
       });
+  }, err => {
+    console.warn("Geolocation denied or failed:", err.message || err);
   });
+} else {
+  console.warn("Geolocation not supported by this browser.");
 }
 
-// Wikipedia
-$('#modalWiki').on('show.bs.modal', () => {
-  const { lat, lng } = map.getCenter();
-  fetch(`php/getWikipedia.php?lat=${lat}&lng=${lng}`)
-    .then(res => res.json())
+// Load city markers (invisible or circle style)
+function loadCityMarkers(countryCode) {
+  fetch(`php/getCities.php?code=${countryCode}`)
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+      return response.json();
+    })
     .then(data => {
-      const articles = data.geonames || [];
-      if (articles.length === 0) {
-        $('#wikiContent').html('<p>No nearby Wikipedia entries found.</p>');
-        return;
-      }
-      const html = '<ul>' + articles.map(a =>
-        `<li><a href="https://${a.wikipediaUrl}" target="_blank">${a.title}</a><br><small>${a.summary}</small></li>`
-      ).join('') + '</ul>';
-      $('#wikiContent').html(html);
-    });
-});
+      if (cityMarkers) map.removeLayer(cityMarkers);
+      cityMarkers = L.layerGroup();
 
-// Weather
-$('#modalWeather').on('show.bs.modal', () => {
-  const { lat, lng } = map.getCenter();
-  fetch(`php/getWeather.php?lat=${lat}&lon=${lng}`)
-    .then(res => res.json())
-    .then(data => {
-      const html = `
-        <p><strong>${data.name}</strong></p>
-        <p>${data.weather[0].description}</p>
-        <p>🌡️ ${data.main.temp}°C (feels like ${data.main.feels_like}°C)</p>
-        <p>💧 Humidity: ${data.main.humidity}%</p>`;
-      $('#weatherContent').html(html);
-    });
-});
+      const cities = data.geonames || [];
 
-// Currency
-$('#modalCurrency').on('show.bs.modal', () => {
-  fetch('php/getExchangeRate.php?symbols=EUR,GBP')
-    .then(res => res.json())
-    .then(data => {
-      const html = `
-        <p>💵 1 USD = ${data.rates.EUR} EUR</p>
-        <p>💷 1 USD = ${data.rates.GBP} GBP</p>`;
-      $('#currencyContent').html(html);
-    });
-});
+      const invisibleIcon = L.icon({
+        iconUrl: '',
+        iconSize: [0, 0],
+        shadowSize: [0, 0]
+      });
 
-// News
-$('#modalNews').on('show.bs.modal', () => {
-  $('#newsContent').html('<p>This is a placeholder. News API integration coming soon.</p>');
-});
+      cities.forEach(city => {
+        const marker = L.marker([city.lat, city.lng], { icon: invisibleIcon })
+          .bindPopup(`<strong>${city.name}</strong><br>Population: ${city.population}`);
+        cityMarkers.addLayer(marker);
+
+        // Optional: visible circle markers (uncomment if needed)
+        /*
+        const circle = L.circleMarker([city.lat, city.lng], {
+          radius: 4,
+          color: '#007bff',
+          fillColor: '#007bff',
+          fillOpacity: 0.7
+        }).bindPopup(`<strong>${city.name}</strong><br>Population: ${city.population}`);
+        cityMarkers.addLayer(circle);
+        */
+      });
+
+      map.addLayer(cityMarkers);
+    })
+    .catch(error => {
+      console.error("Error loading city markers:", error.message || error);
+    });
+}
