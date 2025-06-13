@@ -1,17 +1,39 @@
-body, html {
-  margin: 0;
-  padding: 0;
+html, body {
   height: 100%;
-  font-family: Arial, sans-serif;
+  margin: 0;
 }
-.navbar {
-  z-index: 1000;
-}
+
+/* full screen map under the navbar (56px) */
 #map {
   position: absolute;
-  top: 56px; /* adjust if your navbar is taller */
+  top: 56px;
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 0; /* Important: keep it below buttons */
 }
+
+/* ensure leaflet canvas fills its container */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+/* Position the button stack just below the navbar */
+.position-absolute.top-0.end-0.m-3 {
+  top: 70px !important;      /* push it below the 56px navbar */
+  right: 20px !important;    /* give a little more breathing room */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;               /* space between buttons */
+  z-index: 500;              /* on top of the map */
+}
+
+/* Give each button a consistent width */
+.position-absolute.top-0.end-0.m-3 .btn {
+  min-width: 120px;
+}
+
+/* Optional: add a subtle shadow so they stand out */
+.position-absolute.top-0.end-0.m-3 .btn {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+

@@ -1,40 +1,31 @@
 <?php
-// Show errors for debugging (disable in production)
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+header("Content-Type: application/json");
+ini_set("display_errors", 0); error_reporting(E_ALL);
 
-// Set response header to JSON
-header('Content-Type: application/json');
+$dataPath = __DIR__ . "/../countryBorders.geo.json"; // Path to your GeoJSON file
 
-try {
-    $filePath = '../countryBorders.geo.json';  // correct path from php/ to root
-
-    if (!file_exists($filePath)) {
-        throw new Exception("GeoJSON file not found at $filePath");
-    }
-
-    $jsonData = file_get_contents($filePath);
-    $geoData = json_decode($jsonData, true);
-
-    if (!isset($geoData['features'])) {
-        throw new Exception("Invalid GeoJSON format: 'features' key missing");
-    }
-
-    $countries = [];
-
-    foreach ($geoData['features'] as $feature) {
-        $props = $feature['properties'];
-        if (!empty($props['name']) && !empty($props['iso_a2'])) {
-            $countries[] = [
-                'name' => $props['name'],
-                'iso_a2' => $props['iso_a2']
-            ];
-        }
-    }
-
-    echo json_encode($countries);
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+if (!file_exists($dataPath)) {
+  echo json_encode(['error' => 'GeoJSON file not found']);
+  exit;
 }
+
+$json = file_get_contents($dataPath);
+$data = json_decode($json, true);
+
+if (!$data || !isset($data['features'])) {
+  echo json_encode(['error' => 'Invalid or corrupt GeoJSON data']);
+  exit;
+}
+
+$list = [];
+foreach ($data['features'] as $f) {
+  $list[] = [	    'iso' => $f['properties']['ISO3166-1-Alpha-2'],
+    'name' => $f['properties']['name']
+  ];
+}
+
+echo json_encode($list);
 ?>
+
+
+
