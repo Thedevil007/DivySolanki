@@ -1,39 +1,11 @@
 <?php
-header('Content-Type: application/json');
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+header("Content-Type: application/json");
 
-$code = $_GET['code'] ?? null;
+$apiKey = '63a4b139b2b8c8c296b7b0dc1c7ba461'; // Replace this
+$country = strtolower($_GET['country'] ?? 'us');
 
-if (!$code) {
-    echo json_encode(["error" => "Missing country code"]);
-    exit;
-}
+// GNews supported: us, in, ar, gb, etc.
+$url = "https://gnews.io/api/v4/top-headlines?token=$apiKey&lang=en&country=$country&max=10";
 
-$file = __DIR__ . "/../countryBorders.geo.json";
-
-if (!file_exists($file)) {
-    echo json_encode(["error" => "GeoJSON file not found"]);
-    exit;
-}
-
-$data = json_decode(file_get_contents($file), true);
-
-if (!$data || !isset($data['features'])) {
-    echo json_encode(["error" => "Invalid GeoJSON structure"]);
-    exit;
-}
-
-foreach ($data['features'] as $feature) {
-    if (
-        isset($feature['properties']['iso_a2']) &&
-        $feature['properties']['iso_a2'] === $code
-    ) {
-        echo json_encode($feature);
-        exit;
-    }
-}
-
-// No match found
-echo json_encode(['error' => 'Country not found']);
-?>
+$response = @file_get_contents($url);
+echo $response ?: json_encode(["error" => "News fetch failed"]);

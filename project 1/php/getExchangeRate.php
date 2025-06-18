@@ -1,15 +1,16 @@
 <?php
-header('Content-Type: application/json');
-$symbols = $_GET['symbols']; // e.g., EUR, GBP
-$appId = '6b9aad63ccdf45888e008d6b020ed2e7'; // Replace with your API key
+header("Content-Type: application/json");
 
-$url = "https://openexchangerates.org/api/latest.json?app_id={$appId}&symbols={$symbols}";
+$symbols = strtoupper(trim($_GET['symbols'] ?? 'USD'));
+$url = "https://open.er-api.com/v6/latest/USD";
+$response = @file_get_contents($url);
 
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $url);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$response = curl_exec($ch);
-curl_close($ch);
+if ($response) {
+  $data = json_decode($response, true);
+  $rate = $data['result']==="success" && isset($data['rates'][$symbols]) 
+          ? $data['rates'][$symbols] : null;
 
-echo $response;
-?>
+  echo json_encode(["base" => "USD", "symbol" => $symbols, "rate" => $rate]);
+} else {
+  echo json_encode(["error" => "API request failed"]);
+}
