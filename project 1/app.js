@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currencyList = [];
   let isoToCurrency = {};
   let lastSelectedCountry = null;
+  let clusterGroup = null;
 
   fetch("./php/getCurrencyList.php")
     .then(res => res.json())
@@ -63,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
         fetchWeatherWiki(code);
         fetchNews(code);
         fetchCities(code);
-        fetchPOIs(); // call POIs after border is added
+        fetchPOIs();
       });
   });
 
@@ -200,31 +201,43 @@ document.addEventListener("DOMContentLoaded", () => {
         cityMarkers.addTo(map);
       });
   }
+function fetchPOIs() {
+  if (!borderLayer) return;
 
-  function fetchPOIs() {
-    if (!borderLayer) return;
+  const bounds = borderLayer.getBounds();
+  if (window.clusterGroup) map.removeLayer(clusterGroup);
+  window.clusterGroup = L.markerClusterGroup();
 
-    const bounds = borderLayer.getBounds();
-    const clusterGroup = L.markerClusterGroup();
+  const categories = [
+    { icon: 'fa-hospital', color: 'red', label: 'Hospital' },
+    { icon: 'fa-utensils', color: 'orange', label: 'Restaurant' },
+    { icon: 'fa-university', color: 'blue', label: 'University' },
+    { icon: 'fa-landmark', color: 'purple', label: 'Museum' },
+    { icon: 'fa-shopping-cart', color: 'green', label: 'Shop' },
+    { icon: 'fa-tree', color: 'green', label: 'Park' },
+    { icon: 'fa-car', color: 'cyan', label: 'Taxi Stand' },
+    { icon: 'fa-bus', color: 'yellow', label: 'Bus Station' },
+    { icon: 'fa-hotel', color: 'blue-dark', label: 'Hotel' },
+    { icon: 'fa-bolt', color: 'black', label: 'Power Station' }
+  ];
 
-    const categories = [
-      { icon: 'fa-hospital', color: 'red', label: 'Hospital' },
-      { icon: 'fa-utensils', color: 'orange', label: 'Restaurant' },
-      { icon: 'fa-university', color: 'blue', label: 'University' },
-      { icon: 'fa-landmark', color: 'purple', label: 'Museum' },
-      { icon: 'fa-shopping-cart', color: 'green', label: 'Shop' },
-      { icon: 'fa-tree', color: 'green-dark', label: 'Park' },
-      { icon: 'fa-car', color: 'cyan', label: 'Taxi Stand' },
-      { icon: 'fa-bus', color: 'yellow', label: 'Bus Station' },
-      { icon: 'fa-hotel', color: 'blue-dark', label: 'Hotel' },
-      { icon: 'fa-bolt', color: 'black', label: 'Power Station' }
-    ];
+  let added = 0, attempts = 0;
+  const layers = borderLayer.getLayers();
 
-    for (let i = 0; i < 10; i++) {
-      const cat = categories[i % categories.length];
-      const lat = bounds.getSouth() + Math.random() * (bounds.getNorth() - bounds.getSouth());
-      const lon = bounds.getWest() + Math.random() * (bounds.getEast() - bounds.getWest());
+  while (added < 10 && attempts < 200) {
+    const lat = bounds.getSouth() + Math.random() * (bounds.getNorth() - bounds.getSouth());
+    const lon = bounds.getWest() + Math.random() * (bounds.getEast() - bounds.getWest());
 
+    let inside = false;
+    for (const layer of layers) {
+      if (leafletPip.pointInLayer([lon, lat], layer).length) {
+        inside = true;
+        break;
+      }
+    }
+
+    if (inside) {
+      const cat = categories[added % categories.length];
       const marker = L.marker([lat, lon], {
         icon: L.ExtraMarkers.icon({
           icon: cat.icon,
@@ -232,11 +245,15 @@ document.addEventListener("DOMContentLoaded", () => {
           shape: 'circle',
           prefix: 'fa'
         })
-      }).bindPopup(`<strong>${cat.label}</strong><br>POI ${i + 1}`);
-
+      }).bindPopup(`<strong>${cat.label}</strong><br>POI ${added + 1}`);
       clusterGroup.addLayer(marker);
+      added++;
     }
 
-    map.addLayer(clusterGroup);
+    attempts++;
   }
+
+  map.addLayer(clusterGroup);
+}
+
 });
