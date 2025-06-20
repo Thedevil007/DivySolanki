@@ -49,28 +49,30 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-  document.getElementById("countrySelect").addEventListener("change", function () {
-    const code = this.value;
-    if (!code) return;
-    lastSelectedCountry = code;
+ document.getElementById("countrySelect").addEventListener("change", function () {
+  const code = this.value;
+  if (!code) return;
+  lastSelectedCountry = code;
 
-    ["wikiContent", "currencyContent", "weatherContent", "newsContent"].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.innerHTML = "";
-    });
-
-    fetchBorder(code)
-      .then(() => {
-        fetchWeatherWiki(code);
-        fetchNews(code);
-        fetchCities(code);
-        fetchPOIs();
-      });
+  ["wikiContent", "currencyContent", "weatherContent", "newsContent", "holidaysContent"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = "";
   });
+
+  fetchBorder(code)
+    .then(() => {
+      fetchWeatherWiki(code);
+      fetchNews(code);
+      fetchHolidays(code);  // Add this
+      fetchCities(code);
+      fetchPOIs();
+    });
+});
+
 
   $('#modalCurrency').on('show.bs.modal', function () {
     const countryCode = lastSelectedCountry;
-    const countryCurrency = isoToCurrency[countryCode] || "USD";
+    const countryCurrency = isoToCurrency[countryCode] || "EUR";
     const fromSel = document.getElementById("fromCurrency");
     const toSel = document.getElementById("toCurrency");
     fromSel.innerHTML = "";
@@ -79,8 +81,8 @@ document.addEventListener("DOMContentLoaded", () => {
       fromSel.innerHTML += `<option value="${cur.code}">${cur.code} - ${cur.name}</option>`;
       toSel.innerHTML += `<option value="${cur.code}">${cur.code} - ${cur.name}</option>`;
     });
-    fromSel.value = "USD";
-    toSel.value = countryCurrency === "USD" ? "EUR" : countryCurrency;
+    fromSel.value = "GBP";
+    toSel.value = countryCurrency === "GBP" ? "EUR" : countryCurrency;
     document.getElementById("conversionResult").innerHTML = "";
   });
 
@@ -216,6 +218,28 @@ function fetchWeather(lat, lon) {
         cityMarkers.addTo(map);
       });
   }
+function fetchHolidays(code) {
+  fetch(`./php/getHolidays.php?country=${code}`)
+    .then(res => res.json())
+    .then(data => {
+      const el = document.getElementById("holidaysContent");
+      if (!Array.isArray(data) || !data.length) {
+        el.innerHTML = "<p>No holiday data available.</p>";
+        return;
+      }
+
+      el.innerHTML = data.map(holiday => `
+        <div class="mb-2">
+          <strong>${holiday.localName}</strong> (${holiday.date})<br>
+          ${holiday.name}
+        </div>
+      `).join("");
+    })
+    .catch(() => {
+      document.getElementById("holidaysContent").innerHTML =
+        "<p class='text-danger'>Failed to load holidays.</p>";
+    });
+}
 
 function fetchPOIs() {
   if (!lastSelectedCountry) return;
@@ -268,29 +292,59 @@ function fetchPOIs() {
 
 
   // === EasyButtons Setup ===
-  L.easyButton('fa-home', function(btn, map){
-    map.setView([20, 0], 2);
-  }, 'Reset Map View').addTo(map);
+ // === EasyButtons Setup ===
 
-  let poisVisible = true;
-  L.easyButton('fa-eye', function(btn, map){
-    if (clusterGroup) {
-      if (poisVisible) {
-        map.removeLayer(clusterGroup);
-        btn.button.style.backgroundColor = '#ccc';
-      } else {
-        map.addLayer(clusterGroup);
-        btn.button.style.backgroundColor = '';
-      }
-      poisVisible = !poisVisible;
-    }
-  }, 'Toggle POI Markers').addTo(map);
+// Wikipedia modal opener
+L.easyButton('fa-brands fa-wikipedia-w', function(btn, map){
+  $('#modalWiki').modal('show');
+}, 'Open Wikipedia Info').addTo(map);
 
-  L.easyButton('fa-flag', function(){
-    if (lastSelectedCountry) {
-      alert("Selected Country: " + lastSelectedCountry);
+// Currency modal opener
+L.easyButton('fa-solid fa-money-bill', function(btn, map){
+  $('#modalCurrency').modal('show');
+}, 'Open Currency Converter').addTo(map);
+
+// Weather modal opener
+L.easyButton('fa-solid fa-cloud-sun', function(btn, map){
+  $('#modalWeather').modal('show');
+}, 'Show Weather Details').addTo(map);
+
+// News modal opener
+L.easyButton('fa-solid fa-newspaper', function(btn, map){
+  $('#modalNews').modal('show');
+}, 'Latest News').addTo(map);
+L.easyButton('fa-solid fa-calendar-day', function(btn, map){
+  $('#modalHolidays').modal('show');
+}, 'View Public Holidays').addTo(map);
+
+
+// Toggle POIs
+let poisVisible = true;
+L.easyButton('fa-solid fa-eye', function(btn, map){
+  if (clusterGroup) {
+    if (poisVisible) {
+      map.removeLayer(clusterGroup);
+      btn.button.style.backgroundColor = '#ccc';
     } else {
-      alert("No country selected yet.");
+      map.addLayer(clusterGroup);
+      btn.button.style.backgroundColor = '';
     }
-  }, 'Show Selected Country').addTo(map);
+    poisVisible = !poisVisible;
+  }
+}, 'Toggle POI Markers').addTo(map);
+
+// Reset view
+L.easyButton('fa-solid fa-globe', function(btn, map){
+  map.setView([20, 0], 2);
+}, 'Reset Map View').addTo(map);
+
+// Country info alert
+L.easyButton('fa-solid fa-flag', function(){
+  if (lastSelectedCountry) {
+    alert("Selected Country: " + lastSelectedCountry);
+  } else {
+    alert("No country selected yet.");
+  }
+}, 'Show Selected Country').addTo(map);
+
 });

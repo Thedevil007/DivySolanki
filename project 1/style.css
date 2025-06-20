@@ -1,43 +1,48 @@
+
 html, body {
-  height: 100%;
+  height: 100vh;
   margin: 0;
   padding: 0;
+  overflow: hidden; /* Removes scroll bar */
+  font-family: Arial, sans-serif;
 }
 
-/* Full-screen map under navbar (56px) */
+
+#selectContainer {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 64px;
+  background-color: white;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Select input styling */
+#countrySelect {
+  width: 220px;
+  padding: 6px 12px;
+  font-size: 1rem;
+}
+
+
 #map {
   position: absolute;
-  top: 56px;
+  top: 64px; /* Matches #selectContainer height */
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 1;
 }
 
-/* Ensure Leaflet canvas fills its container */
-.leaflet-container {
-  width: 100%;
-  height: 100%;
-  /* z-index: 1; */
-}
 
-/* EasyButton container styling */
-.leaflet-control-easybutton {
-  z-index: 9999 !important;
-}
 
-/* Style individual EasyButtons */
-.leaflet-control-easybutton .leaflet-bar a {
-  font-size: 20px;
-  width: 36px;
-  height: 36px;
-  line-height: 36px;
-  text-align: center;
-}
 
-/* Optional: right-hand button stack (if using) */
 .position-absolute.top-0.end-0.m-3 {
-  top: 70px !important;
+  top: 80px !important; /* Push below the dropdown */
   right: 20px !important;
   display: flex;
   flex-direction: column;

@@ -1,237 +1,135 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
- <head>
-
   <meta charset="UTF-8" />
-
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
   <title>Gazetteer</title>
 
- 
-
+  <!-- Stylesheets -->
   <link rel="stylesheet" href="assets/bootstrap/bootstrap.min.css" />
-
   <link rel="stylesheet" href="assets/leaflet/leaflet.css" />
-
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css" integrity="sha512-ENrTWqddXrLJsQS2A86QmvA17PkJ0GVm1bqj5aTgpeMAfDKN2+SIOLpKG8R/6KkimnhTb+VW5qqUHB/r1zaRgg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css" integrity="sha512-fYyZwU1wU0QWB4Yutd/Pvhy5J1oWAwFXun1pt+Bps04WSe4Aq6tyHlT4+MHSJhD8JlLfgLuC4CbCnX5KHSjyCg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-extra-markers/1.0.6/css/leaflet.extra-markers.min.css" integrity="sha512-/Awv4oaPPfbQNkPKgj4J5xWWVF4cO+0/MnSNIefZ6vjtzQrREl8XaXwOjNTNQwfG6q/WAzcIVfc9VH7xh4HV4A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-extra-markers/1.0.6/css/leaflet.extra-markers.min.css" />
   <link rel="stylesheet" href="assets/fontawesome/css/all.min.css" />
-
+  <link rel="stylesheet" href="Leaflet.EasyButton-2.4.0/Leaflet.EasyButton-2.4.0/src/easy-button.css" />
   <link rel="stylesheet" href="style.css" />
-
-</head>
-
- 
-
 </head>
 
 <body>
 
-  <!-- Navbar + country dropdown -->
-
-  <nav class="navbar navbar-dark bg-dark px-3">
-
-    <span class="navbar-brand">Gazetteer</span>
-
-    <select id="countrySelect" class="form-select w-auto ms-3">
-
+  <!-- Fixed select dropdown -->
+  <div id="selectContainer" class="bg-white text-center shadow-sm">
+    <select id="countrySelect" class="form-select shadow-sm">
       <option value="">Select a country</option>
-
+      <option value="AF">Afghanistan</option> <!-- AJAX will populate others -->
     </select>
-
-  </nav>
-
- 
+  </div>
 
   <!-- Map container -->
-
   <div id="map"></div>
 
- 
-
   <!-- Modal trigger buttons -->
-
-  <div class="position-absolute top-0 end-0 m-3 d-flex flex-column gap-2 z-3">
-
-    <button class="btn btn-info"    data-bs-toggle="modal" data-bs-target="#modalWiki">Wikipedia</button>
-
+  <!-- <div class="position-absolute top-0 end-0 m-3 d-flex flex-column gap-2 z-3" style="top: 80px !important;">
+    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modalWiki">Wikipedia</button>
     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalCurrency">Currency</button>
-
     <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalWeather">Weather</button>
-
     <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modalNews">News</button>
-
-  </div>
-
- 
+  </div> -->
 
   <!-- Wikipedia Modal -->
-
   <div class="modal fade" id="modalWiki" tabindex="-1">
-
-    <div class="modal-dialog">
-
-      <div class="modal-content">
-
-        <div class="modal-header">
-
-          <h5>Wikipedia</h5>
-
-          <button class="btn-close" data-bs-dismiss="modal"></button>
-
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content shadow">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title">Wikipedia</h5>
+          <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-
         <div class="modal-body" id="wikiContent"></div>
-
       </div>
-
     </div>
-
   </div>
 
- 
-
-  <!-- Currency Modal with Converter -->
-
+  <!-- Currency Modal -->
   <div class="modal fade" id="modalCurrency" tabindex="-1">
-
-    <div class="modal-dialog">
-
-      <div class="modal-content">
-
-        <div class="modal-header">
-
-          <h5>Currency Converter</h5>
-
-          <button class="btn-close" data-bs-dismiss="modal"></button>
-
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content shadow">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">Currency Converter</h5>
+          <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-
         <div class="modal-body">
-
           <form id="currencyForm">
-
             <div class="mb-3">
-
               <label for="amount" class="form-label">Amount</label>
-
               <input type="number" class="form-control" id="amount" value="1" min="0" step="any" required>
-
             </div>
-
             <div class="mb-3">
-
               <label for="fromCurrency" class="form-label">From</label>
-
               <select class="form-select" id="fromCurrency"></select>
-
             </div>
-
             <div class="mb-3">
-
               <label for="toCurrency" class="form-label">To</label>
-
               <select class="form-select" id="toCurrency"></select>
-
             </div>
-
-            <button type="submit" class="btn btn-primary w-100">Convert</button>
-
+            <button type="submit" class="btn btn-light w-100">Convert</button>
           </form>
-
           <div class="mt-3" id="conversionResult"></div>
-
         </div>
-
       </div>
-
     </div>
-
   </div>
-
- 
 
   <!-- Weather Modal -->
-
   <div class="modal fade" id="modalWeather" tabindex="-1">
-
-    <div class="modal-dialog">
-
-      <div class="modal-content">
-
-        <div class="modal-header">
-
-          <h5>Weather</h5>
-
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content shadow">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title">Weather</h5>
           <button class="btn-close" data-bs-dismiss="modal"></button>
-
         </div>
-
         <div class="modal-body" id="weatherContent"></div>
-
       </div>
-
     </div>
-
   </div>
-
- 
 
   <!-- News Modal -->
-
   <div class="modal fade" id="modalNews" tabindex="-1">
-
-    <div class="modal-dialog">
-
-      <div class="modal-content">
-
-        <div class="modal-header">
-
-          <h5>News</h5>
-
-          <button class="btn-close" data-bs-dismiss="modal"></button>
-
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content shadow">
+        <div class="modal-header bg-secondary text-white">
+          <h5 class="modal-title">News</h5>
+          <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-
         <div class="modal-body" id="newsContent"></div>
-
       </div>
-
     </div>
-
   </div>
-
- 
+  
+<!-- Public Holidays Modal -->
+<div class="modal fade" id="modalHolidays" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Public Holidays</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="holidaysContent">
+        <!-- Holidays will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
 
   <!-- Scripts -->
-
- <!-- Scripts -->
-
-<script src="assets/jquery/jquery.min.js"></script>
-
-<script src="assets/bootstrap/bootstrap.bundle.min.js"></script>
-
-<script src="assets/leaflet/leaflet.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js" integrity="sha512-OFs3W4DIZ5ZkrDhBFtsCP6JXtMEDGmhl0QPlmWYBJay40TT1n3gt2Xuw8Pf/iezgW9CdabjkNChRqozl/YADmg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-extra-markers/1.0.6/js/leaflet.extra-markers.min.js" integrity="sha512-DOXOeA0a5re2RxrjqG+dsYgSV0gXgoUhNKWyXaRQ7DB8gr94y3AXyhbXAUj2No2CfWH0xSyUwZnLhaPLaXIn2Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-<script src="assets/fontawesome/js/all.min.js"></script>
-
-<script src="app.js"></script>
-
- 
+  <script src="assets/jquery/jquery.min.js"></script>
+  <script src="assets/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="assets/leaflet/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-extra-markers/1.0.6/js/leaflet.extra-markers.min.js"></script>
+  <script src="assets/fontawesome/js/all.min.js"></script>
+  <script src="Leaflet.EasyButton-2.4.0/Leaflet.EasyButton-2.4.0/src/easy-button.js"></script>
+  <script src="app.js"></script>
 
 </body>
-
 </html>
