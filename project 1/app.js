@@ -133,21 +133,36 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchWikipedia(ctr.lat, ctr.lng);
   }
 
-  function fetchWeather(lat, lon) {
-    fetch(`./php/getWeather.php?lat=${lat}&lon=${lon}`)
-      .then(res => res.json())
-      .then(d => {
-        const out = d.error
-          ? `<p>${d.error}</p>`
-          : `
-            <p><strong>${d.name}</strong></p>
-            <p>Temp: ${d.main.temp}°C</p>
-            <p>Humidity: ${d.main.humidity}%</p>
-            <p>Conditions: ${d.weather[0].description}</p>
-          `;
-        document.getElementById("weatherContent").innerHTML = out;
-      });
-  }
+function fetchWeather(lat, lon) {
+  fetch(`./php/getWeather.php?lat=${lat}&lon=${lon}`)
+    .then(res => res.json())
+    .then(d => {
+      const el = document.getElementById("weatherContent");
+
+      if (d.error) {
+        el.innerHTML = `<p class="text-danger">${d.error}</p>`;
+        return;
+      }
+
+      const iconCode = d.weather[0].icon;
+      const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+
+      el.innerHTML = `
+        <div class="text-center">
+          <h5 class="mb-1">${d.name}</h5>
+          <img src="${iconUrl}" alt="Weather icon" class="mb-2" style="width: 80px; height: 80px;" />
+          <p class="mb-1"><strong>${d.weather[0].description.toUpperCase()}</strong></p>
+          <p class="mb-0">🌡️ Temp: <strong>${d.main.temp}°C</strong></p>
+          <p class="mb-0">💧 Humidity: <strong>${d.main.humidity}%</strong></p>
+        </div>
+      `;
+    })
+    .catch(err => {
+      document.getElementById("weatherContent").innerHTML =
+        "<p class='text-danger'>Unable to fetch weather data.</p>";
+    });
+}
+
 
   function fetchWikipedia(lat, lon) {
     fetch(`./php/getWikipedia.php?lat=${lat}&lon=${lon}`)
@@ -201,59 +216,81 @@ document.addEventListener("DOMContentLoaded", () => {
         cityMarkers.addTo(map);
       });
   }
+
 function fetchPOIs() {
-  if (!borderLayer) return;
+  if (!lastSelectedCountry) return;
 
-  const bounds = borderLayer.getBounds();
-  if (window.clusterGroup) map.removeLayer(clusterGroup);
-  window.clusterGroup = L.markerClusterGroup();
+  const url = `./php/getGeoPOIs.php?country=${lastSelectedCountry}`;
+  if (clusterGroup) map.removeLayer(clusterGroup);
+  clusterGroup = L.markerClusterGroup();
 
+  // Predefined categories for visual variety
   const categories = [
     { icon: 'fa-hospital', color: 'red', label: 'Hospital' },
+    { icon: 'fa-shield-alt', color: 'blue', label: 'Police Station' },
     { icon: 'fa-utensils', color: 'orange', label: 'Restaurant' },
-    { icon: 'fa-university', color: 'blue', label: 'University' },
     { icon: 'fa-landmark', color: 'purple', label: 'Museum' },
+    { icon: 'fa-city', color: 'darkblue', label: 'City' },
     { icon: 'fa-shopping-cart', color: 'green', label: 'Shop' },
     { icon: 'fa-tree', color: 'green', label: 'Park' },
-    { icon: 'fa-car', color: 'cyan', label: 'Taxi Stand' },
-    { icon: 'fa-bus', color: 'yellow', label: 'Bus Station' },
     { icon: 'fa-hotel', color: 'blue-dark', label: 'Hotel' },
-    { icon: 'fa-bolt', color: 'black', label: 'Power Station' }
+    { icon: 'fa-university', color: 'cadetblue', label: 'University' },
+    { icon: 'fa-bus', color: 'yellow', label: 'Bus Station' }
   ];
 
-  let added = 0, attempts = 0;
-  const layers = borderLayer.getLayers();
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      const places = data.geonames || [];
+      places.forEach((poi, idx) => {
+        const cat = categories[idx % categories.length]; // Rotate category
 
-  while (added < 10 && attempts < 200) {
-    const lat = bounds.getSouth() + Math.random() * (bounds.getNorth() - bounds.getSouth());
-    const lon = bounds.getWest() + Math.random() * (bounds.getEast() - bounds.getWest());
+        const marker = L.marker([poi.lat, poi.lng], {
+          icon: L.ExtraMarkers.icon({
+            icon: cat.icon,
+            markerColor: cat.color,
+            shape: 'circle',
+            prefix: 'fa'
+          })
+        }).bindPopup(`
+          <strong>${poi.name || cat.label}</strong><br>
+          ${poi.fcodeName || 'Point of Interest'}<br>
+          Lat: ${poi.lat}, Lon: ${poi.lng}
+        `);
 
-    let inside = false;
-    for (const layer of layers) {
-      if (leafletPip.pointInLayer([lon, lat], layer).length) {
-        inside = true;
-        break;
-      }
-    }
+        clusterGroup.addLayer(marker);
+      });
 
-    if (inside) {
-      const cat = categories[added % categories.length];
-      const marker = L.marker([lat, lon], {
-        icon: L.ExtraMarkers.icon({
-          icon: cat.icon,
-          markerColor: cat.color,
-          shape: 'circle',
-          prefix: 'fa'
-        })
-      }).bindPopup(`<strong>${cat.label}</strong><br>POI ${added + 1}`);
-      clusterGroup.addLayer(marker);
-      added++;
-    }
-
-    attempts++;
-  }
-
-  map.addLayer(clusterGroup);
+      map.addLayer(clusterGroup);
+    })
+    .catch(err => console.error("POI fetch error:", err));
 }
 
+
+  // === EasyButtons Setup ===
+  L.easyButton('fa-home', function(btn, map){
+    map.setView([20, 0], 2);
+  }, 'Reset Map View').addTo(map);
+
+  let poisVisible = true;
+  L.easyButton('fa-eye', function(btn, map){
+    if (clusterGroup) {
+      if (poisVisible) {
+        map.removeLayer(clusterGroup);
+        btn.button.style.backgroundColor = '#ccc';
+      } else {
+        map.addLayer(clusterGroup);
+        btn.button.style.backgroundColor = '';
+      }
+      poisVisible = !poisVisible;
+    }
+  }, 'Toggle POI Markers').addTo(map);
+
+  L.easyButton('fa-flag', function(){
+    if (lastSelectedCountry) {
+      alert("Selected Country: " + lastSelectedCountry);
+    } else {
+      alert("No country selected yet.");
+    }
+  }, 'Show Selected Country').addTo(map);
 });
