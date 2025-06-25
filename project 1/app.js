@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(() => {
       fetchWeatherWiki(code);
       fetchNews(code);
-      fetchHolidays(code);  // Add this
+      fetchHolidays(code);  
       fetchCities(code);
       fetchPOIs();
     });
@@ -291,7 +291,6 @@ function fetchPOIs() {
 }
 
 
-  // === EasyButtons Setup ===
  // === EasyButtons Setup ===
 
 // Wikipedia modal opener

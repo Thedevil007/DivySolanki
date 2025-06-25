@@ -1,7 +1,7 @@
 <?php
 header("Content-Type: application/json");
 
-$apiKey = '63a4b139b2b8c8c296b7b0dc1c7ba461'; // Replace this
+$apiKey = '63a4b139b2b8c8c296b7b0dc1c7ba461';
 $country = strtolower($_GET['country'] ?? 'us');
 
 // GNews supported: us, in, ar, gb, etc.

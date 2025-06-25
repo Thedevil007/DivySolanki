@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 $lat = $_GET['lat'];
 $lon = $_GET['lon'];
-$username = 'divy_solanki'; // Replace with your username
+$username = 'divy_solanki'; 
 
 $url = "http://api.geonames.org/findNearbyWikipediaJSON?lat={$lat}&lng={$lon}&username={$username}&radius=20&maxRows=5";
 
