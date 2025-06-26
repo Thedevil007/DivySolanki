@@ -5,37 +5,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Gazetteer</title>
 
+  
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="assets/bootstrap/bootstrap.min.css" />
-  <link rel="stylesheet" href="assets/leaflet/leaflet.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-extra-markers/1.0.6/css/leaflet.extra-markers.min.css" />
-  <link rel="stylesheet" href="assets/fontawesome/css/all.min.css" />
-  <link rel="stylesheet" href="Leaflet.EasyButton-2.4.0/Leaflet.EasyButton-2.4.0/src/easy-button.css" />
-  <link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="assets/bootstrap/bootstrap.min.css" />
+<link rel="stylesheet" href="assets/leaflet/leaflet.css" />
+<link rel="stylesheet" href="assets/markercluster/MarkerCluster.css" />
+<link rel="stylesheet" href="assets/markercluster/MarkerCluster.Default.css" />
+<link rel="stylesheet" href="assets/leaflet-extra-markers/leaflet.extra-markers.min.css" />
+<link rel="stylesheet" href="assets/fontawesome/css/all.min.css" />
+<link rel="stylesheet" href="assets/leaflet-easybutton/easy-button.css" />
+<link rel="stylesheet" href="style.css" />
+
+
+  <!-- Favicon -->
+  <link rel="icon" href="assets/favicon/favicon.ico" type="image/x-icon" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+  <link rel="manifest" href="assets/favicon/site.webmanifest">
 </head>
 
 <body>
+  <!-- Preloader -->
+  <div id="preloader">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
 
-  <!-- Fixed select dropdown -->
-  <div id="selectContainer" class="bg-white text-center shadow-sm">
+  <!-- Floating Country Select -->
+  <div id="selectContainer" class="position-absolute top-0 start-50 translate-middle-x mt-3 z-3">
     <select id="countrySelect" class="form-select shadow-sm">
       <option value="">Select a country</option>
-      <option value="AF">Afghanistan</option> <!-- AJAX will populate others -->
     </select>
   </div>
 
   <!-- Map container -->
   <div id="map"></div>
-
-  <!-- Modal trigger buttons -->
-  <!-- <div class="position-absolute top-0 end-0 m-3 d-flex flex-column gap-2 z-3" style="top: 80px !important;">
-    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modalWiki">Wikipedia</button>
-    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalCurrency">Currency</button>
-    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalWeather">Weather</button>
-    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modalNews">News</button>
-  </div> -->
 
   <!-- Wikipedia Modal -->
   <div class="modal fade" id="modalWiki" tabindex="-1">
@@ -43,7 +49,7 @@
       <div class="modal-content shadow">
         <div class="modal-header bg-info text-white">
           <h5 class="modal-title">Wikipedia</h5>
-          <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          <button class="btn-close" data-bs-dismiss="modal" data-bs-theme="dark"></button>
         </div>
         <div class="modal-body" id="wikiContent"></div>
       </div>
@@ -51,85 +57,124 @@
   </div>
 
   <!-- Currency Modal -->
-  <div class="modal fade" id="modalCurrency" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+  <div id="currencyModal" class="modal fade" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="false" aria-labelledby="currencyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content shadow">
-        <div class="modal-header bg-success text-white">
-          <h5 class="modal-title">Currency Converter</h5>
-          <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-header bg-secondary bg-gradient text-white">
+          <h5 class="modal-title">Currency calculator</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form id="currencyForm">
-            <div class="mb-3">
-              <label for="amount" class="form-label">Amount</label>
-              <input type="number" class="form-control" id="amount" value="1" min="0" step="any" required>
+          <form>
+            <div class="form-floating mb-3">
+              <input id="fromAmount" type="number" class="form-control" value="1" min="1" step="1">
+              <label>From USD</label>
             </div>
-            <div class="mb-3">
-              <label for="fromCurrency" class="form-label">From</label>
-              <select class="form-select" id="fromCurrency"></select>
+            <div class="form-floating mb-3">
+              <select id="exchangeRate" class="form-select shadow-sm"></select>
+              <label for="exchangeRate">Convert to</label>
             </div>
-            <div class="mb-3">
-              <label for="toCurrency" class="form-label">To</label>
-              <select class="form-select" id="toCurrency"></select>
+            <div class="form-floating">
+              <input id="toAmount" type="text" class="form-control" disabled>
+              <label for="toAmount">Result</label>
             </div>
-            <button type="submit" class="btn btn-light w-100">Convert</button>
           </form>
-          <div class="mt-3" id="conversionResult"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">CLOSE</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Weather Modal -->
-  <div class="modal fade" id="modalWeather" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content shadow">
-        <div class="modal-header bg-warning text-dark">
-          <h5 class="modal-title">Weather</h5>
-          <button class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body" id="weatherContent"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- News Modal -->
-  <div class="modal fade" id="modalNews" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content shadow">
-        <div class="modal-header bg-secondary text-white">
-          <h5 class="modal-title">News</h5>
-          <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body" id="newsContent"></div>
-      </div>
-    </div>
-  </div>
-  
-<!-- Public Holidays Modal -->
-<div class="modal fade" id="modalHolidays" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+ <!-- Weather Summary Modal -->
+<div class="modal fade" id="modalWeather" tabindex="-1" aria-labelledby="weatherTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg">
     <div class="modal-content shadow">
       <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title">Public Holidays</h5>
-        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <h5 class="modal-title" id="weatherTitle">City, Country</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body" id="holidaysContent">
-        <!-- Holidays will be loaded here -->
+      <div class="modal-body" id="weatherContent">
+        <!-- JS will inject weather content here -->
+      </div>
+      <div class="modal-footer small text-muted justify-content-between">
+        <span id="weatherUpdated">Last updated: </span>
+        <a href="https://openweathermap.org" target="_blank" class="text-decoration-none">Powered by OpenWeatherMap</a>
       </div>
     </div>
   </div>
 </div>
 
-  <!-- Scripts -->
-  <script src="assets/jquery/jquery.min.js"></script>
-  <script src="assets/bootstrap/bootstrap.bundle.min.js"></script>
-  <script src="assets/leaflet/leaflet.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-extra-markers/1.0.6/js/leaflet.extra-markers.min.js"></script>
-  <script src="assets/fontawesome/js/all.min.js"></script>
-  <script src="Leaflet.EasyButton-2.4.0/Leaflet.EasyButton-2.4.0/src/easy-button.js"></script>
-  <script src="app.js"></script>
+
+ <!-- News Modal -->
+<div class="modal fade" id="modalNews" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow">
+      
+      <!-- Red Header -->
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="fa-solid fa-bolt me-2"></i>BREAKING NEWS</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- News Content -->
+      <div class="modal-body" id="newsContent">
+        <!-- Injected by JS -->
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline-danger btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <!-- Public Holidays Modal -->
+  <div class="modal fade" id="modalHolidays" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Public Holidays</h5>
+          <button class="btn-close" data-bs-dismiss="modal" data-bs-theme="dark"></button>
+        </div>
+        <div class="modal-body" id="holidaysContent">
+          <!-- Holidays will be loaded here -->
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Summary Modal -->
+<div class="modal fade" id="modalSummary" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title"><i class="fa-solid fa-circle-info me-2"></i>At a glance</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="summaryContent">
+        <!-- Country info will be injected here -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Scripts -->
+<script src="assets/jquery/jquery.min.js"></script>
+<script src="assets/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="assets/leaflet/leaflet.js"></script>
+<script src="assets/markercluster/leaflet.markercluster.js"></script>
+<script src="assets/leaflet-extra-markers/leaflet.extra-markers.min.js"></script>
+<script src="assets/fontawesome/js/all.min.js"></script>
+<script src="assets/leaflet-easybutton/easy-button.js"></script>
+<script src="assets/numeral.min.js"></script>
+<script src="assets/datejs/date.min.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>

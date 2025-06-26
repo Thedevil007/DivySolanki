@@ -3,7 +3,6 @@ header("Content-Type: application/json");
 ini_set("display_errors", 0); error_reporting(E_ALL);
 
 $dataPath = __DIR__ . "/../countryBorders.geo.json"; 
-
 if (!file_exists($dataPath)) {
   echo json_encode(['error' => 'GeoJSON file not found']);
   exit;

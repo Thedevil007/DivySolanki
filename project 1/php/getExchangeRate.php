@@ -1,16 +1,34 @@
 <?php
-header("Content-Type: application/json");
+header('Content-Type: application/json');
 
-$symbols = strtoupper(trim($_GET['symbols'] ?? 'USD'));
-$url = "https://open.er-api.com/v6/latest/USD";
-$response = @file_get_contents($url);
+// Replace this with your actual API key
+$apiKey = 'ca6358a5ec3ecd544409f760';
+$url = "https://v6.exchangerate-api.com/v6/$apiKey/latest/USD";
 
-if ($response) {
-  $data = json_decode($response, true);
-  $rate = $data['result']==="success" && isset($data['rates'][$symbols]) 
-          ? $data['rates'][$symbols] : null;
+// Use cURL to fetch the data
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 
-  echo json_encode(["base" => "USD", "symbol" => $symbols, "rate" => $rate]);
-} else {
-  echo json_encode(["error" => "API request failed"]);
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$curlError = curl_error($ch);
+curl_close($ch);
+
+if ($response === false || $httpCode !== 200) {
+    echo json_encode([
+        "error" => "Failed to retrieve exchange rates",
+        "details" => $curlError ?: "HTTP status $httpCode"
+    ]);
+    exit;
 }
+
+$data = json_decode($response, true);
+if (!isset($data["conversion_rates"]) || !is_array($data["conversion_rates"])) {
+    echo json_encode(["error" => "Invalid API response"]);
+    exit;
+}
+
+// Return the conversion rates in expected format
+echo json_encode(["rates" => $data["conversion_rates"]]);

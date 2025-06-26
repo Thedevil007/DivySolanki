@@ -1,17 +1,15 @@
 <?php
 header('Content-Type: application/json');
 
-$lat = $_GET['lat'];
-$lng = $_GET['lng'];
-$key = '3222fddda6ee426b8b7fe74886d5caa3'; // Your actual API key
+if (!isset($_GET['code'])) {
+  echo json_encode(['error' => 'Missing country code']);
+  exit;
+}
 
-$url = "https://api.opencagedata.com/geocode/v1/json?q={$lat}+{$lng}&key={$key}&pretty=0";
+$code = strtoupper($_GET['code']);
+$username = 'divy_solanki'; // 🔁 CHANGE THIS
 
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $url);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$response = curl_exec($ch);
-curl_close($ch);
+$url = "http://api.geonames.org/countryInfoJSON?country=$code&username=$username";
 
+$response = file_get_contents($url);
 echo $response;
-?>
