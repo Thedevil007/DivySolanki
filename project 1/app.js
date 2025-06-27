@@ -51,33 +51,27 @@ document.addEventListener("DOMContentLoaded", () => {
   let currencyRates          = {};
   let currencyNames          = {};
   let isoToCurrency          = {};
+  let currencyDataReady = false;
   let lastSelectedCountry    = null;
 
   // ───────────────────────────────────────────────────────────────
   // Load currency names & rates
   // ───────────────────────────────────────────────────────────────
-  fetch("https://openexchangerates.org/api/currencies.json")
-    .then(r => r.json())
-    .then(json => currencyNames = json);
+Promise.all([
+  fetch("https://openexchangerates.org/api/currencies.json").then(r => r.json()),
+  fetch("./php/getExchangeRate.php").then(res => res.json())
+])
+.then(([names, ratesData]) => {
+  if (ratesData.error) {
+    console.error("Currency API error:", ratesData);
+    return;
+  }
+  currencyNames = names;
+  currencyRates = ratesData.rates;
+  currencyDataReady = true;  // ✅ Set flag
+})
+.catch(err => console.error("Failed to load currency data:", err));
 
-  fetch("./php/getExchangeRate.php")
-  .then(res => res.json())
-  .then(data => {
-    if (data.error) {
-      console.error("Currency API error:", data);
-    } else {
-      currencyRates = data.rates;      // ← rates now lives under data.rates
-    }
-  })
-  .catch(err => console.error("Failed to load currency rates:", err));
-  function getBaseCurrencyCode() {
-  // pick manual selection first, otherwise IP country, fallback USD
-  return (
-    isoToCurrency[selectedCountryCode] ||
-    isoToCurrency[initialIPCountryCode] ||
-    "USD"
-  );
-}
 
   // ───────────────────────────────────────────────────────────────
   // Load country list & auto‐select by IP
