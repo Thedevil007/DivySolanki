@@ -1,38 +1,33 @@
 <?php
-header('Content-Type: application/json');
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+header("Content-Type: application/json");
 
-$code = $_GET['code'] ?? null;
+if (!isset($_GET['code'])) {
+  echo json_encode(["error" => "No country code provided"]);
+  exit;
+}
 
-if (!$code) {
-    echo json_encode(["error" => "Missing country code"]);
+$code = strtoupper($_GET['code']);
+$filePath = __DIR__ . '/../countryBorders.geo.json'; // ← important: one level up from /php
+
+if (!file_exists($filePath)) {
+  echo json_encode(["error" => "GeoJSON file not found"]);
+  exit;
+}
+
+$geojson = json_decode(file_get_contents($filePath), true);
+if (!$geojson || !isset($geojson['features'])) {
+  echo json_encode(["error" => "Invalid GeoJSON format"]);
+  exit;
+}
+
+foreach ($geojson['features'] as $feature) {
+  if (
+    isset($feature['properties']['iso_a2']) &&
+    strtoupper($feature['properties']['iso_a2']) === $code
+  ) {
+    echo json_encode($feature);
     exit;
+  }
 }
 
-$file = __DIR__ . "/../countryBorders.geo.json";
-
-if (!file_exists($file)) {
-    echo json_encode(["error" => "GeoJSON file not found"]);
-    exit;
-}
-
-$data = json_decode(file_get_contents($file), true);
-
-if (!$data || !isset($data['features'])) {
-    echo json_encode(["error" => "Invalid GeoJSON structure"]);
-    exit;
-}
-
-foreach ($data['features'] as $feature) {
-    if (
-        isset($feature['properties']['ISO3166-1-Alpha-2']) &&
-        $feature['properties']['ISO3166-1-Alpha-2'] === $code
-    ) {
-        echo json_encode($feature);
-        exit;
-    }
-}
-
-echo json_encode(['error' => 'Country not found']);
-?>
+echo json_encode(["error" => "Country code not found"]);

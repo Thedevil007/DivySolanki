@@ -1,30 +1,30 @@
 <?php
 header("Content-Type: application/json");
-ini_set("display_errors", 0); error_reporting(E_ALL);
 
-$dataPath = __DIR__ . "/../countryBorders.geo.json"; 
-if (!file_exists($dataPath)) {
-  echo json_encode(['error' => 'GeoJSON file not found']);
-  exit;
+$file = __DIR__ . '/../countryBorders.geo.json'; // Go one level up to reach root
+
+if (!file_exists($file)) {
+    echo json_encode(["error" => "GeoJSON not found"]);
+    exit;
 }
 
-$json = file_get_contents($dataPath);
-$data = json_decode($json, true);
+$geo = json_decode(file_get_contents($file), true);
 
-if (!$data || !isset($data['features'])) {
-  echo json_encode(['error' => 'Invalid or corrupt GeoJSON data']);
-  exit;
+if (!$geo || !isset($geo['features'])) {
+    echo json_encode(["error" => "Invalid GeoJSON"]);
+    exit;
 }
 
-$list = [];
-foreach ($data['features'] as $f) {
-  $list[] = [	    'iso' => $f['properties']['ISO3166-1-Alpha-2'],
-    'name' => $f['properties']['name']
-  ];
+$result = [];
+foreach ($geo['features'] as $feature) {
+    $props = $feature['properties'];
+    $name = $props['name'] ?? $props['ADMIN'] ?? '';
+    $iso2 = $props['iso_a2'] ?? $props['ISO_A2'] ?? '';
+    $currency = $props['currency'] ?? '';
+
+    if ($name && $iso2) {
+        $result[] = ["name" => $name, "iso" => $iso2, "currency" => $currency];
+    }
 }
 
-echo json_encode($list);
-?>
-
-
-
+echo json_encode($result);

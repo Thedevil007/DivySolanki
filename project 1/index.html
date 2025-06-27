@@ -5,17 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Gazetteer</title>
 
-  
   <!-- Stylesheets -->
-<link rel="stylesheet" href="assets/bootstrap/bootstrap.min.css" />
-<link rel="stylesheet" href="assets/leaflet/leaflet.css" />
-<link rel="stylesheet" href="assets/markercluster/MarkerCluster.css" />
-<link rel="stylesheet" href="assets/markercluster/MarkerCluster.Default.css" />
-<link rel="stylesheet" href="assets/leaflet-extra-markers/leaflet.extra-markers.min.css" />
-<link rel="stylesheet" href="assets/fontawesome/css/all.min.css" />
-<link rel="stylesheet" href="assets/leaflet-easybutton/easy-button.css" />
-<link rel="stylesheet" href="style.css" />
-
+  <link rel="stylesheet" href="assets/bootstrap/bootstrap.min.css" />
+  <link rel="stylesheet" href="assets/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="assets/markercluster/MarkerCluster.css" />
+  <link rel="stylesheet" href="assets/markercluster/MarkerCluster.Default.css" />
+  <link rel="stylesheet" href="assets/leaflet-extra-markers/leaflet.extra-markers.min.css" />
+  <link rel="stylesheet" href="assets/fontawesome/css/all.min.css" />
+  <link rel="stylesheet" href="assets/leaflet-easybutton/easy-button.css" />
+  <link rel="stylesheet" href="style.css" />
 
   <!-- Favicon -->
   <link rel="icon" href="assets/favicon/favicon.ico" type="image/x-icon" />
@@ -33,21 +31,21 @@
     </div>
   </div>
 
-  <!-- Floating Country Select -->
+  <!-- Country Select -->
   <div id="selectContainer" class="position-absolute top-0 start-50 translate-middle-x mt-3 z-3">
     <select id="countrySelect" class="form-select shadow-sm">
       <option value="">Select a country</option>
     </select>
   </div>
 
-  <!-- Map container -->
+  <!-- Map -->
   <div id="map"></div>
 
   <!-- Wikipedia Modal -->
   <div class="modal fade" id="modalWiki" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content shadow">
-        <div class="modal-header bg-info text-white">
+        <div class="modal-header bg-primary text-white">
           <h5 class="modal-title">Wikipedia</h5>
           <button class="btn-close" data-bs-dismiss="modal" data-bs-theme="dark"></button>
         </div>
@@ -57,81 +55,73 @@
   </div>
 
   <!-- Currency Modal -->
-  <div id="currencyModal" class="modal fade" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="false" aria-labelledby="currencyModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
+ <div class="modal fade" id="currencyModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Currency Converter</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label for="fromAmount" class="form-label">Amount</label>
+            <input id="fromAmount" type="number" class="form-control" value="1" min="1">
+          </div>
+          <div class="mb-3">
+            <label for="fromCurrency" class="form-label">From</label>
+            <select id="fromCurrency" class="form-select"></select>
+          </div>
+          <div class="mb-3">
+            <label for="exchangeRate" class="form-label">To</label>
+            <select id="exchangeRate" class="form-select"></select>
+          </div>
+          <div class="mb-3">
+            <label for="toAmount" class="form-label">Result</label>
+            <input id="toAmount" type="text" class="form-control" disabled>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- Weather Modal -->
+  <div class="modal fade" id="modalWeather" tabindex="-1" aria-labelledby="weatherTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
       <div class="modal-content shadow">
-        <div class="modal-header bg-secondary bg-gradient text-white">
-          <h5 class="modal-title">Currency calculator</h5>
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="weatherTitle">City, Country</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body">
-          <form>
-            <div class="form-floating mb-3">
-              <input id="fromAmount" type="number" class="form-control" value="1" min="1" step="1">
-              <label>From USD</label>
-            </div>
-            <div class="form-floating mb-3">
-              <select id="exchangeRate" class="form-select shadow-sm"></select>
-              <label for="exchangeRate">Convert to</label>
-            </div>
-            <div class="form-floating">
-              <input id="toAmount" type="text" class="form-control" disabled>
-              <label for="toAmount">Result</label>
-            </div>
-          </form>
+        <div class="modal-body" id="weatherContent"></div>
+        <div class="modal-footer small text-muted justify-content-between">
+          <span id="weatherUpdated">Last updated: </span>
+          <a href="https://openweathermap.org" target="_blank" class="text-decoration-none">Powered by OpenWeatherMap</a>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- News Modal -->
+  <div class="modal fade" id="modalNews" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content shadow">
+        <!-- After -->
+<div class="modal-header bg-primary text-white">
+  <h5 class="modal-title"><i class="fa-solid fa-bolt me-2"></i>Top News Articles</h5>
+  <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+
+        <div class="modal-body" id="newsContent"></div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">CLOSE</button>
+          <button class="btn btn-outline-primary btn-sm" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
   </div>
 
- <!-- Weather Summary Modal -->
-<div class="modal fade" id="modalWeather" tabindex="-1" aria-labelledby="weatherTitle" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable modal-lg">
-    <div class="modal-content shadow">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title" id="weatherTitle">City, Country</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" id="weatherContent">
-        <!-- JS will inject weather content here -->
-      </div>
-      <div class="modal-footer small text-muted justify-content-between">
-        <span id="weatherUpdated">Last updated: </span>
-        <a href="https://openweathermap.org" target="_blank" class="text-decoration-none">Powered by OpenWeatherMap</a>
-      </div>
-    </div>
-  </div>
-</div>
-
-
- <!-- News Modal -->
-<div class="modal fade" id="modalNews" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content shadow">
-      
-      <!-- Red Header -->
-      <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title"><i class="fa-solid fa-bolt me-2"></i>BREAKING NEWS</h5>
-        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-
-      <!-- News Content -->
-      <div class="modal-body" id="newsContent">
-        <!-- Injected by JS -->
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-outline-danger btn-sm" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-  <!-- Public Holidays Modal -->
+  <!-- Holidays Modal -->
   <div class="modal fade" id="modalHolidays" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content shadow">
@@ -139,42 +129,37 @@
           <h5 class="modal-title">Public Holidays</h5>
           <button class="btn-close" data-bs-dismiss="modal" data-bs-theme="dark"></button>
         </div>
-        <div class="modal-body" id="holidaysContent">
-          <!-- Holidays will be loaded here -->
+        <div class="modal-body" id="holidaysContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Modal -->
+  <div class="modal fade" id="modalSummary" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="fa-solid fa-circle-info me-2"></i>At a glance</h5>
+          <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="summaryContent"></div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-primary btn-sm" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
   </div>
-  <!-- Summary Modal -->
-<div class="modal fade" id="modalSummary" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content shadow">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title"><i class="fa-solid fa-circle-info me-2"></i>At a glance</h5>
-        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" id="summaryContent">
-        <!-- Country info will be injected here -->
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
 
-
-<!-- Scripts -->
-<script src="assets/jquery/jquery.min.js"></script>
-<script src="assets/bootstrap/bootstrap.bundle.min.js"></script>
-<script src="assets/leaflet/leaflet.js"></script>
-<script src="assets/markercluster/leaflet.markercluster.js"></script>
-<script src="assets/leaflet-extra-markers/leaflet.extra-markers.min.js"></script>
-<script src="assets/fontawesome/js/all.min.js"></script>
-<script src="assets/leaflet-easybutton/easy-button.js"></script>
-<script src="assets/numeral.min.js"></script>
-<script src="assets/datejs/date.min.js"></script>
-<script src="app.js"></script>
-
+  <!-- Scripts -->
+  <script src="assets/jquery/jquery.min.js"></script>
+  <script src="assets/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="assets/leaflet/leaflet.js"></script>
+  <script src="assets/markercluster/leaflet.markercluster.js"></script>
+  <script src="assets/leaflet-extra-markers/leaflet.extra-markers.min.js"></script>
+  <script src="assets/fontawesome/js/all.min.js"></script>
+  <script src="assets/leaflet-easybutton/easy-button.js"></script>
+  <script src="assets/numeral.min.js"></script>
+  <script src="assets/datejs/date.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

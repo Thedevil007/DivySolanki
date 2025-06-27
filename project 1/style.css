@@ -13,8 +13,12 @@ html, body {
   bottom: 0;
   left: 0;
   right: 0;
+  width: 100vw;
+  height: 100vh;
   z-index: 1;
 }
+
+/* Weather icons */
 #weatherContent img {
   width: 80px;
   height: 80px;
@@ -37,9 +41,9 @@ html, body {
   width: 100%;
 }
 
-/* Style the dropdown to not overflow and show a limited number of items */
+/* Exchange dropdown style */
 #exchangeRate {
-  max-height: 10em; /* Show about 5–7 items */
+  max-height: 10em;
   overflow-y: auto;
   width: 100%;
   box-sizing: border-box;
@@ -51,14 +55,14 @@ select#exchangeRate option {
   font-size: 0.95rem;
 }
 
-/* Fix modal width and height */
+/* Modal dimension tweaks */
 #currencyModal .modal-dialog {
   max-width: 400px;
   margin: auto;
   max-height: 85vh;
 }
 
-/* Optional: EasyButton custom layout */
+/* EasyButton container position */
 .position-absolute.top-0.end-0.m-3 {
   top: 80px !important;
   right: 20px !important;
@@ -71,4 +75,59 @@ select#exchangeRate option {
 .position-absolute.top-0.end-0.m-3 .btn {
   min-width: 120px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Modal scroll fix */
+.modal-dialog-scrollable .modal-body {
+  overflow-y: auto;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  #selectContainer {
+    width: 90vw;
+    top: 10px;
+    padding: 0 10px;
+  }
+
+  #countrySelect {
+    font-size: 1rem;
+    padding: 10px;
+  }
+
+  .modal-dialog {
+    margin: 10px;
+    width: 95% !important;
+  }
+
+  .modal-content {
+    font-size: 0.95rem;
+  }
+
+  .modal-header h5,
+  .modal-body,
+  .modal-footer {
+    padding: 10px 15px;
+  }
+
+  .position-absolute.top-0.end-0.m-3 {
+    right: 10px !important;
+    top: 70px !important;
+    gap: 0.4rem;
+  }
+
+  .position-absolute.top-0.end-0.m-3 .btn {
+    min-width: auto;
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+
+  #weatherContent img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .modal-dialog-scrollable .modal-body {
+    max-height: 60vh;
+  }
 }
