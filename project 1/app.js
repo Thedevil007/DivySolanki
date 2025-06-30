@@ -1,9 +1,5 @@
-// app.js — Full updated Gazetteer application script (with default button colors)
-
 document.addEventListener("DOMContentLoaded", () => {
-  // ───────────────────────────────────────────────────────────────
-  // Map & base‐layer setup
-  // ───────────────────────────────────────────────────────────────
+
   const map = L.map("map").setView([20, 0], 2);
   const defaultIcon = L.icon({
     iconUrl: 'assets/leaflet/images/marker-icon.png',
@@ -68,7 +64,7 @@ Promise.all([
   }
   currencyNames = names;
   currencyRates = ratesData.rates;
-  currencyDataReady = true;  // ✅ Set flag
+  currencyDataReady = true;  //  Set flag
 })
 .catch(err => console.error("Failed to load currency data:", err));
 
@@ -127,23 +123,25 @@ Promise.all([
       fetchHolidays(code);
       fetchCities(code);
       fetchPOIs();
-      document.getElementById("preloader")?.classList.add("hidden");
+      setTimeout(() => {
+  document.getElementById("preloader")?.classList.add("hidden");
+}, 500); // give it a moment to paint
+
     });
 
     fetch(`./php/getGeocode.php?code=${code}`)
       .then(r => r.json())
       .then(data => {
         const d = data.geonames?.[0] || {};
-        document.getElementById("summaryContent").innerHTML = `
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item"><strong>Capital:</strong> ${d.capital || "N/A"}</li>
-            <li class="list-group-item"><strong>Continent:</strong> ${d.continentName || "N/A"}</li>
-            <li class="list-group-item"><strong>Languages:</strong> ${d.languages || "N/A"}</li>
-            <li class="list-group-item"><strong>Currency:</strong> ${d.currencyCode || "N/A"}</li>
-            <li class="list-group-item"><strong>ISO:</strong> ${d.countryCode || "N/A"}</li>
-            <li class="list-group-item"><strong>Population:</strong> ${numeral(d.population).format("0,0")}</li>
-            <li class="list-group-item"><strong>Area:</strong> ${numeral(d.areaInSqKm).format("0,0")} km²</li>
-          </ul>`;
+       document.getElementById("summaryCapital").innerText    = d.capital || "N/A";
+document.getElementById("summaryContinent").innerText  = d.continentName || "N/A";
+document.getElementById("summaryLanguages").innerText  = d.languages || "N/A";
+document.getElementById("summaryCurrency").innerText   = d.currencyCode || "N/A";
+document.getElementById("summaryISO2").innerText       = d.countryCode || "N/A";
+document.getElementById("summaryISO3").innerText       = d.isoAlpha3 || "N/A";
+document.getElementById("summaryPopulation").innerText = numeral(d.population).format("0,0");
+document.getElementById("summaryArea").innerText       = `${numeral(d.areaInSqKm).format("0,0")} km²`;
+
       });
   });
 
@@ -162,14 +160,37 @@ Promise.all([
       });
   }
 
-  function fetchWeatherWiki(code){
-    if (!borderLayer) return;
-    const ctr = borderLayer.getBounds().getCenter();
-    fetchWeather(ctr.lat, ctr.lng);
-    fetchWikipedia(ctr.lat, ctr.lng);
-  }
+// ─────────────────────────────────────────────────────────────
+// Fetch Wikipedia + Weather for selected country’s CAPITAL
+// ─────────────────────────────────────────────────────────────
+function fetchWeatherWiki(code) {
+  fetch(`./php/getGeocode.php?code=${code}`)
+    .then(res => res.json())
+    .then(data => {
+      const capitalData = data.geonames?.[0];
+      if (capitalData && capitalData.capital && capitalData.lat && capitalData.lng) {
+        const capital = capitalData.capital;
+        const lat = parseFloat(capitalData.lat);
+        const lon = parseFloat(capitalData.lng);
+        const country = capitalData.countryName || code;
+        fetchWeather(lat, lon, capital, country);
+        fetchWikipedia(lat, lon);
+      } else {
+        console.warn("Capital not found, using country center");
+        const ctr = borderLayer.getBounds().getCenter();
+        fetchWeather(ctr.lat, ctr.lng, "Center", code);
+        fetchWikipedia(ctr.lat, ctr.lng);
+      }
+    })
+    .catch(() => {
+      const ctr = borderLayer.getBounds().getCenter();
+      fetchWeather(ctr.lat, ctr.lng, "Center", code);
+      fetchWikipedia(ctr.lat, ctr.lng);
+    });
+}
 
- function fetchWeather(lat, lon) {
+
+function fetchWeather(lat, lon) {
   fetch(`./php/getWeather.php?lat=${lat}&lon=${lon}`)
     .then(res => res.json())
     .then(data => {
@@ -177,43 +198,33 @@ Promise.all([
       const title   = document.getElementById("weatherTitle");
       const updated = document.getElementById("weatherUpdated");
 
-      // Error case
       if (data.cod !== "200" || !data.city) {
         el.innerHTML = `<p class="text-danger">Unable to retrieve forecast.</p>`;
         return;
       }
 
-      // Header
-      title.textContent   = `${data.city.name}, ${data.city.country}`;
+      // Set location title and update time
+      title.textContent = `${data.city.name}, ${data.city.country}`;
       updated.textContent = `Last updated: ${new Date().toLocaleString()}`;
 
       // Today’s forecast
-      const today   = data.list[0];
-      const icon    = today.weather[0].icon;
-      const desc    = today.weather[0].description;
-      const temp    = `${Math.round(today.main.temp)}°C`;
-      const min     = `${Math.round(today.main.temp_min)}°C`;
-      const max     = `${Math.round(today.main.temp_max)}°C`;
-      const humidity = `${today.main.humidity}%`;
+      const today = data.list[0];
+      const icon = today.weather[0].icon;
+      const desc = today.weather[0].description;
+      const min  = `${Math.round(today.main.temp_min)}°C`;
+      const max  = `${Math.round(today.main.temp_max)}°C`;
 
       let html = `
-        <div class="row text-center mb-4">
-          <h5 class="mb-3">Today</h5>
-          <div class="col-4">
-            <img src="https://openweathermap.org/img/wn/${icon}@2x.png" 
-                 alt="${desc}" class="mb-2" />
-            <div class="fw-bold text-capitalize">${desc}</div>
-          </div>
-          <div class="col-8 d-flex flex-column justify-content-center align-items-start">
-            <p class="mb-1">🌡️ Temp: <strong>${temp}</strong></p>
-            <p class="mb-1">⬇️ Min: <strong>${min}</strong>, ⬆️ Max: <strong>${max}</strong></p>
-            <p class="mb-1">💧 Humidity: <strong>${humidity}</strong></p>
-          </div>
+        <h5 class="text-center">TODAY</h5>
+        <div class="text-center mb-4">
+          <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}" style="width:70px; height:70px;" />
+          <div class="fw-bold text-capitalize mt-2">${desc}</div>
+          <div class="fs-5"><strong>Min:</strong> ${min}, <strong>Max:</strong> ${max}</div>
         </div>
         <h6 class="text-muted mb-2">Next 3 Days</h6>
         <div class="d-flex justify-content-around text-center">`;
 
-      // Pick one entry per day for the next three days
+      // Next 3-day forecast
       const days = {};
       data.list.forEach(entry => {
         const d = new Date(entry.dt * 1000).toDateString();
@@ -222,18 +233,20 @@ Promise.all([
         }
       });
 
-      // Render the three-day cards
       Object.entries(days).forEach(([_, info]) => {
-        const ic     = info.weather[0].icon;
-        const tp     = `${Math.round(info.main.temp)}°C`;
-        const label  = new Date(info.dt * 1000)
-                        .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' });
+        const ic = info.weather[0].icon;
+        const min = `${Math.round(info.main.temp_min)}°C`;
+        const max = `${Math.round(info.main.temp_max)}°C`;
+        const label = new Date(info.dt * 1000).toLocaleDateString('en-GB', {
+          weekday: 'short', day: 'numeric'
+        });
+
         html += `
           <div class="card shadow-sm p-2" style="width:100px">
             <small class="text-muted">${label}</small>
-            <img src="https://openweathermap.org/img/wn/${ic}.png" 
-                 alt="" class="my-1" style="width:48px" />
-            <div class="fw-bold">${tp}</div>
+            <img src="https://openweathermap.org/img/wn/${ic}.png" alt="" class="my-1" style="width:48px;" />
+            <div class="fw-bold">Min: ${min}</div>
+            <div class="fw-bold">Max: ${max}</div>
           </div>`;
       });
 
@@ -245,6 +258,7 @@ Promise.all([
         `<p class="text-danger">Error loading weather data.</p>`;
     });
 }
+
 
   function fetchWikipedia(lat, lon){
     fetch(`./php/getWikipedia.php?lat=${lat}&lon=${lon}`)
@@ -258,6 +272,7 @@ Promise.all([
       });
   }
 
+
 function fetchNews(code) {
   fetch(`./php/getNews.php?country=${code.toLowerCase()}`)
     .then(res => res.json())
@@ -269,28 +284,30 @@ function fetchNews(code) {
         return;
       }
       container.innerHTML = articles.map(n => `
-        <div class="card mb-3 shadow-sm" style="border-radius: 0.5rem; overflow: hidden; border-left: 4px solid #0d6efd;">
-          <div class="row g-0 align-items-center">
-            <div class="col-auto">
-              <img src="${n.urlToImage || 'assets/favicon/news.png'}"
-                   class="img-fluid"
-                   style="width: 100px; height: 100px; object-fit: cover;"
-                   alt="news image">
-            </div>
-            <div class="col">
-              <div class="card-body py-2">
-                <a href="${n.url}" target="_blank"
-                   class="card-title h6 fw-bold mb-1 text-primary d-block">
-                  ${n.title}
-                </a>
-                <p class="card-text mb-0">
-                  <small class="text-primary">${n.source?.name || 'Unknown'}</small>
-                </p>
-              </div>
-            </div>
-          </div>
+  <div class="card mb-3 shadow-sm" style="border-radius: 0.5rem; overflow: hidden; border-left: 4px solid #0d6efd;">
+    <div class="row g-0 align-items-center">
+      <div class="col-auto">
+       <img src="${n.image || 'assets/favicon/news.png'}"
+     class="img-fluid"
+     style="width: 100px; height: 100px; object-fit: cover;"
+     alt="news image"
+     onerror="this.onerror=null; this.src='assets/favicon/news.png';">
+      </div>
+      <div class="col">
+        <div class="card-body py-2">
+          <a href="${n.url}" target="_blank"
+             class="card-title h6 fw-bold mb-1 text-primary d-block">
+            ${n.title}
+          </a>
+          <p class="card-text mb-0">
+            <small class="text-primary">${n.source?.name || 'Unknown'}</small>
+          </p>
         </div>
-      `).join("");
+      </div>
+    </div>
+  </div>
+`).join("");
+
     })
     .catch(err => {
       console.error(err);
@@ -300,17 +317,35 @@ function fetchNews(code) {
 }
 
 
-  function fetchHolidays(code){
-    fetch(`./php/getHolidays.php?country=${code}`)
-      .then(r => r.json())
-      .then(data => {
-        document.getElementById("holidaysContent").innerHTML = Array.isArray(data)
-          ? data.map(h =>
-              `<div class="mb-2"><strong>${h.localName}</strong> (${new Date(h.date).toDateString()})<br>${h.name}</div>`
-            ).join("")
-          : "<p>No holiday data available.</p>";
-      });
-  }
+  function fetchHolidays(code) {
+  fetch(`./php/getHolidays.php?country=${code}`)
+    .then(r => r.json())
+    .then(data => {
+      const container = document.getElementById("holidaysContent");
+      if (!Array.isArray(data) || data.length === 0) {
+        container.innerHTML = "<p>No holiday data available.</p>";
+        return;
+      }
+
+      const html = data.map(h => {
+        const dateStr = new Date(h.date).toLocaleDateString("en-GB", {
+          weekday: "short", day: "numeric", month: "short", year: "numeric"
+        });
+        return `
+          <div class="d-flex justify-content-between border-bottom py-2">
+            <strong class="me-2">${h.localName}</strong>
+            <span class="text-muted small">${dateStr}</span>
+          </div>`;
+      }).join("");
+
+      container.innerHTML = html;
+    })
+    .catch(() => {
+      document.getElementById("holidaysContent").innerHTML =
+        "<p class='text-danger'>Failed to load holiday data.</p>";
+    });
+}
+
 
   function fetchCities(code){
     fetch(`./php/getCities.php?code=${code}`)
@@ -376,41 +411,67 @@ function fetchNews(code) {
     );
   }
 
-  function populateCurrencyDropdowns() {
+ // ───────────────────────────────────────────────────────────────
+// CURRENCY CONVERTER (From: USD → To: user-selected currency)
+// ───────────────────────────────────────────────────────────────
+
+function populateCurrencyDropdowns() {
   const fromSel = document.getElementById("fromCurrency");
   const toSel   = document.getElementById("exchangeRate");
   fromSel.innerHTML = toSel.innerHTML = "";
 
-  // build both <select> lists
+  // Add all currency options to both dropdowns
   Object.entries(currencyRates).forEach(([code, rate]) => {
     const label = currencyNames[code] || code;
-    fromSel.insertAdjacentHTML("beforeend",
-      `<option value="${code}">${label} (${code})</option>`
-    );
-    toSel.insertAdjacentHTML("beforeend",
-      `<option value="${rate}" data-code="${code}">${label} (${code})</option>`
-    );
+    const optionHTML = `<option value="${rate}" data-code="${code}">${label} (${code})</option>`;
+    fromSel.insertAdjacentHTML("beforeend", optionHTML);
+    toSel.insertAdjacentHTML("beforeend", optionHTML);
   });
 
-  // default “from” → user’s country or USD, “to” → USD
-  fromSel.value = getBaseCurrencyCode();
-  toSel.value   = currencyRates["USD"] || Object.values(currencyRates)[0];
+  // Detect IP-based currency and pre-select in "From"
+  fetch("https://ipapi.co/json/")
+    .then(res => res.json())
+    .then(data => {
+      const userCurrency = data.currency || "USD";
+      const fromOption = Array.from(fromSel.options).find(opt =>
+        opt.dataset.code === userCurrency
+      );
+      if (fromOption) {
+        fromSel.value = fromOption.value;
+      } else {
+        fromSel.selectedIndex = 0;
+      }
+
+      // Default "To" to USD or the next option
+      const toDefault = Array.from(toSel.options).find(opt =>
+        opt.dataset.code === "USD"
+      );
+      toSel.value = toDefault ? toDefault.value : toSel.options[1]?.value;
+
+      calcCurrencyResult();
+    })
+    .catch(() => {
+      fromSel.selectedIndex = 0;
+      toSel.selectedIndex = 1;
+      calcCurrencyResult();
+    });
 }
-  function calcCurrencyResult(){
-    const amt  = parseFloat(document.getElementById("fromAmount").value)  || 0;
-    const rate = parseFloat(document.getElementById("exchangeRate").value) || 0;
-    document.getElementById("toAmount").value =
-      numeral(amt*rate).format("0,0.00");
-  }
 
-  $('#currencyModal').on("show.bs.modal", ()=>{
-    document.getElementById("fromAmount").value = 1;
-    document.getElementById("toAmount")  .value = "";
-    populateCurrencyDropdowns();
-    calcCurrencyResult();
-  });
+function calcCurrencyResult() {
+  const amt    = parseFloat(document.getElementById("fromAmount").value) || 0;
+  const fromR  = parseFloat(document.getElementById("fromCurrency").value) || 1;
+  const toR    = parseFloat(document.getElementById("exchangeRate").value) || 1;
+  const result = amt * (toR / fromR);
+  document.getElementById("toAmount").value = numeral(result).format("0,0.00");
+}
 
-  ["fromAmount","fromCurrency","exchangeRate"].forEach(id => {
+$('#currencyModal').on("show.bs.modal", () => {
+  document.getElementById("fromAmount").value = 1;
+  document.getElementById("toAmount").value   = "";
+  populateCurrencyDropdowns();
+});
+
+["fromAmount", "fromCurrency", "exchangeRate"].forEach(id => {
   const el = document.getElementById(id);
   el.addEventListener("input",  calcCurrencyResult);
   el.addEventListener("change", calcCurrencyResult);
@@ -420,7 +481,7 @@ function fetchNews(code) {
   // EasyButtons for modals
   // ───────────────────────────────────────────────────────────────
   [
-    { icon:"fa-wikipedia-w",   modal:"modalWiki",     title:"Wikipedia"    },
+    { icon:"fa-book",   modal:"modalWiki",     title:"Wikipedia"    },
     { icon:"fa-money-bill",    modal:"currencyModal", title:"Currency"     },
     { icon:"fa-cloud-sun",     modal:"modalWeather",  title:"Weather"      },
     { icon:"fa-newspaper",     modal:"modalNews",     title:"News"         },
@@ -433,4 +494,4 @@ function fetchNews(code) {
     ).addTo(map);
   });
 
-}); // end DOMContentLoaded
+}); 

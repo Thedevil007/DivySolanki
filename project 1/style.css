@@ -131,3 +131,40 @@ select#exchangeRate option {
     max-height: 60vh;
   }
 }
+
+/* Weather Modal size tweak */
+#modalWeather .modal-dialog {
+  max-width: 400px;
+  margin: auto;
+}
+
+#modalWeather .modal-content {
+  padding: 1rem 1.2rem;
+  border-radius: 0.75rem;
+}
+
+/* Shrink icon and font slightly for compact UI */
+#modalWeather .card,
+#modalWeather .modal-body {
+  font-size: 0.95rem;
+}
+
+#modalWeather .modal-title {
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  width: 100%;
+}
+#preloader {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 2000;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#preloader.hidden {
+  display: none;
+}

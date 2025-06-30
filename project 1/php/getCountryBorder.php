@@ -7,7 +7,7 @@ if (!isset($_GET['code'])) {
 }
 
 $code = strtoupper($_GET['code']);
-$filePath = __DIR__ . '/../countryBorders.geo.json'; // ← important: one level up from /php
+$filePath = __DIR__ . '/../countryBorders.geo.json'; // 
 
 if (!file_exists($filePath)) {
   echo json_encode(["error" => "GeoJSON file not found"]);

@@ -1,7 +1,7 @@
 <?php
 header("Content-Type: application/json");
 
-$file = __DIR__ . '/../countryBorders.geo.json'; // Go one level up to reach root
+$file = __DIR__ . '/../countryBorders.geo.json';
 
 if (!file_exists($file)) {
     echo json_encode(["error" => "GeoJSON not found"]);

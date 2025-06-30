@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 
-// Replace this with your actual API key
+
 $apiKey = 'ca6358a5ec3ecd544409f760';
 $url = "https://v6.exchangerate-api.com/v6/$apiKey/latest/USD";
 
