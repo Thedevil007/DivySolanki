@@ -61,7 +61,7 @@ const Editor = ({ heading, icon, color, value, onChange }) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer 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` 
+                'Authorization': `` 
             },
             body: JSON.stringify({
                 model: 'gpt-3.5-turbo', // Specify the new model
