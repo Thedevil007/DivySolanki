@@ -1,0 +1,36 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f0f13;
+  --surface: #18181f;
+  --surface2: #22222c;
+  --border: #2e2e3a;
+  --text: #e8e8f0;
+  --muted: #7a7a92;
+  --accent: #6c63ff;
+  --accent-light: #8a83ff;
+
+  --applied: #3b82f6;
+  --applied-bg: rgba(59,130,246,0.12);
+  --interview: #f59e0b;
+  --interview-bg: rgba(245,158,11,0.12);
+  --offer: #10b981;
+  --offer-bg: rgba(16,185,129,0.12);
+  --rejected: #ef4444;
+  --rejected-bg: rgba(239,68,68,0.12);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  min-height: 100vh;
+}
+
+button { cursor: pointer; font-family: inherit; }
+input, textarea, select { font-family: inherit; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
